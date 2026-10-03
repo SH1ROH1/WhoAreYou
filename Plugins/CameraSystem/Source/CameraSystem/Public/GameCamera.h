@@ -158,6 +158,8 @@ private:
 	void UpdateRotation(float DeltaTime);
 	void UpdateInteractiveCamera(float DeltaTime);
 
+
+
 	TWeakObjectPtr<AGameCameraEventer> LastTriggeredEventer;
 
 	FVector CalculateDesiredLocation() const;
@@ -179,6 +181,10 @@ private:
 	void InitializeInteractiveCamera();
 
 public:
+
+	float TargeFieldOfView = 90.f;
+
+	void UpdateFieldOfView(float DeltaTime, float TargetFOV);
 
 	UFUNCTION(BlueprintCallable, Category = "Trigger History")
 	void SetLastTriggeredEventer(AGameCameraEventer* Eventer);

@@ -22,6 +22,7 @@ void AGameCamera::BeginPlay()
 	}
 
 	CurrentState = TargetState;
+	TargeFieldOfView = TargetState.FieldOfView;
 	FixedWorldPosition = GetWorldPositionFromState(CurrentState);
 
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
@@ -33,7 +34,7 @@ void AGameCamera::BeginPlay()
 	{
 		Camera->SetRelativeLocation(FVector::ZeroVector);
 		Camera->SetRelativeRotation(FRotator::ZeroRotator);
-		Camera->SetFieldOfView(CurrentState.FieldOfView);
+		Camera->SetFieldOfView(TargeFieldOfView);
 	}
 
 	if (CurrentState.ControlMode != ECameraControlMode::None)
@@ -54,17 +55,25 @@ void AGameCamera::Tick(float DeltaTime)
 
 	UpdateBlend(DeltaTime);
 
-	const bool bWaitingForFirstPerson = TargetState.ControlMode == ECameraControlMode::FirstPerson && CurrentState.ControlMode != ECameraControlMode::FirstPerson;
 
-	if (bWaitingForFirstPerson)
+
+	if (UCameraComponent* Camera = GetCameraComponent())
 	{
-		if (UCameraComponent* Camera = GetCameraComponent())
-		{
-			Camera->SetFieldOfView(CurrentState.FieldOfView);
-		}
-
-		return;
+		UpdateFieldOfView(DeltaTime, TargeFieldOfView);
 	}
+
+
+	//const bool bWaitingForFirstPerson = TargetState.ControlMode == ECameraControlMode::FirstPerson && CurrentState.ControlMode != ECameraControlMode::FirstPerson;
+
+	//if (bWaitingForFirstPerson)
+	//{
+	//	if (UCameraComponent* Camera = GetCameraComponent())
+	//	{
+	//		Camera->SetFieldOfView(CurrentState.FieldOfView);
+	//	}
+
+	//	return;
+	//}
 
 	if (CurrentState.ControlMode != ECameraControlMode::None)
 	{
@@ -76,10 +85,7 @@ void AGameCamera::Tick(float DeltaTime)
 		UpdateRotation(DeltaTime);
 	}
 
-	if (UCameraComponent* Camera = GetCameraComponent())
-	{
-		Camera->SetFieldOfView(CurrentState.FieldOfView);
-	}
+
 }
 
 void AGameCamera::SetPlayerTarget(AActor* NewTarget)
@@ -105,6 +111,7 @@ void AGameCamera::SetState(const FGameCameraState& NewState)
 	}
 
 	TargetState = NewState;
+	TargeFieldOfView = TargetState.FieldOfView;
 
 	if (NewState.FollowTarget == ECameraFollowTarget::None)
 	{
@@ -211,6 +218,7 @@ void AGameCamera::SetCameraState(const FGameCameraState& NewState, ECameraTransi
 		if (UCameraComponent* Camera = GetCameraComponent())
 		{
 			Camera->SetFieldOfView(NewState.FieldOfView);
+			CurrentState.FieldOfView = NewState.FieldOfView;
 		}
 	}
 }
@@ -469,7 +477,6 @@ void AGameCamera::UpdateBlend(float DeltaTime)
 		SetActorLocation(NewWorldPosition);
 		SetActorRotation(NewWorldRotation);
 
-		CurrentState.FieldOfView = FMath::FInterpTo(CurrentState.FieldOfView, TargetState.FieldOfView, DeltaTime, FirstPersonSpeed);
 
 		const bool bPositionReached = NewWorldPosition.Equals(TargetWorldPosition, 1.f);
 		const bool bRotationReached = NewWorldRotation.Equals(TargetWorldRotation, 1.f);
@@ -490,6 +497,7 @@ void AGameCamera::UpdateBlend(float DeltaTime)
 		SetActorRotation(TargetWorldRotation);
 
 		CurrentState = TargetState;
+
 		CurrentState.OrbitYaw = GetActorRotation().Yaw;
 		CurrentState.OrbitPitch = FMath::Clamp(GetActorRotation().Pitch, CurrentState.MinPitch, CurrentState.MaxPitch);
 		bInteractiveInitialized = true;
@@ -499,7 +507,6 @@ void AGameCamera::UpdateBlend(float DeltaTime)
 
 	CurrentState.Position = FMath::VInterpTo(CurrentState.Position, TargetState.Position, DeltaTime, CurrentState.BlendSpeed);
 	CurrentState.Rotation = FMath::RInterpTo(CurrentState.Rotation, TargetState.Rotation, DeltaTime, CurrentState.BlendSpeed);
-	CurrentState.FieldOfView = FMath::FInterpTo(CurrentState.FieldOfView, TargetState.FieldOfView, DeltaTime, CurrentState.BlendSpeed);
 	CurrentState.PositionMode = TargetState.PositionMode;
 	CurrentState.FollowTarget = TargetState.FollowTarget;
 	CurrentState.bUseTargetRotation = TargetState.bUseTargetRotation;
@@ -514,6 +521,7 @@ void AGameCamera::UpdateBlend(float DeltaTime)
 	CurrentState.MouseSensitivity = TargetState.MouseSensitivity;
 	CurrentState.MinPitch = TargetState.MinPitch;
 	CurrentState.MaxPitch = TargetState.MaxPitch;
+
 
 	if (!bConnectThirdPerson)
 	{
@@ -542,6 +550,30 @@ void AGameCamera::UpdateBlend(float DeltaTime)
 	{
 		InitializeInteractiveCamera();
 	}
+}
+
+void AGameCamera::UpdateFieldOfView(float DeltaTime, float TargetFOV)
+{
+	UCameraComponent* Camera = GetCameraComponent();
+
+	if (!Camera)
+	{
+		return;
+	}
+
+
+	const float CurrentFOV = Camera->FieldOfView;
+	UE_LOG(LogTemp, Warning, TEXT("FOV %f -> %f speed %f"), CurrentFOV, TargetFOV, TargetState.BlendSpeed);
+
+	const float NewFOV = FMath::FInterpTo(
+		CurrentFOV,
+		TargetFOV,
+		DeltaTime,
+		TargetState.BlendSpeed
+	);
+
+	Camera->SetFieldOfView(NewFOV);
+	CurrentState.FieldOfView = NewFOV;
 }
 
 FVector AGameCamera::CalculateDesiredLocation() const

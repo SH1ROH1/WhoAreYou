@@ -7,6 +7,7 @@
 class UButton;
 class UTextBlock;
 struct FDialogueNode;
+class USoundBase;
 
 UCLASS()
 class WHOAREYOU_API UDialogueWidget : public UUserWidget
@@ -40,6 +41,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> ChoiceBText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue|Sound")
+	TObjectPtr<USoundBase> TypewriterSound;
 
 private:
 	FTimerHandle TypewriterTimer;

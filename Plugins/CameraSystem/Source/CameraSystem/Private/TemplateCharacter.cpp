@@ -2,6 +2,7 @@
 #include "Engine/World.h"
 #include "Engine/EngineTypes.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Components/InputComponent.h"
 #include "GameCamera.h"
 #include "MovementEventer.h"
@@ -63,6 +64,7 @@ void ATemplateCharacter::Tick(float DeltaTime)
 
 	ApplyMovement(DeltaTime);
 	UpdateCameraRotation();
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 }
 
 void ATemplateCharacter::Move_X(float Value)

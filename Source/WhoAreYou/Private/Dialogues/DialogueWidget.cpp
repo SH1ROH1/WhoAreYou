@@ -3,6 +3,8 @@
 #include "Dialogues/DialogueDataAsset.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "TimerManager.h"
 
 void UDialogueWidget::NativeConstruct()
@@ -98,6 +100,21 @@ void UDialogueWidget::TypewriterTick()
 	CurrentCharacter++;
 
 	DialogueText->SetText(FText::FromString(FullText.Left(CurrentCharacter)));
+
+	if (CurrentCharacter <= FullText.Len())
+	{
+		const TCHAR Character = FullText[CurrentCharacter - 1];
+
+		if (!FChar::IsWhitespace(Character) && !FChar::IsPunct(Character) && TypewriterSound)
+		{
+			UGameplayStatics::PlaySound2D(
+				this,
+				TypewriterSound,
+				1.0f,
+				FMath::RandRange(0.95f, 1.05f)
+			);
+		}
+	}
 
 	if (CurrentCharacter >= FullText.Len())
 	{
