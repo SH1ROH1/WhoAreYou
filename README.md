@@ -1,7 +1,7 @@
 # FIRST GAME MADED FOR GAMEJAM
 
 [<img width="300" height="400" alt="image" src="https://github.com/user-attachments/assets/89635935-055c-4263-86a8-dfe308bc3c03" />
-](https://miro.com/app/board/uXjVGTTglGQ=/?moveToWidget=3458764685767993906&cot=14)
+](https://itch.io/jam/dattel-kit-gamejam/rate/5096746)
 
 This repository have all the code used in the game.
 
